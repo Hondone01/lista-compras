@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Compras</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
+            background-color: #f7f7f7;
+        }
+        h1, h3 {
+            text-align: center;
+            color: #ff69b4;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            padding: 20px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        .item label {
+            font-size: 1.5em; /* Tamaño del nombre de los artículos */
+            color: blue;
+            flex: 1;
+        }
+        .checkbox-group {
+            display: flex;
+            gap: 20px;
+        }
+        .checkbox-group label {
+            color: black;
+            font-size: 0.8em; /* Tamaño de los textos Sí y No */
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        ul li {
+            padding: 5px 0;
+        }
+        .sublist {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Artículos a Comprar</h1>
+        <div id="shoppingList"></div>
+
+        <div class="sublist">
+            <h3>Ya compré</h3>
+            <ul id="purchasedList"></ul>
+        </div>
+        <div class="sublist">
+            <h3>Falta comprar</h3>
+            <ul id="pendingList"></ul>
+        </div>
+    </div>
+
+    <script>
+        const articulos = [
+            "Pasta ballina azul",
+            "Ballina blanca x2",
+            "Pasta ballina amarilla",
+            "Relleno",
+            "Fécula de maíz",
+            "Fratacho rígido",
+            "Fratacho flexible",
+            "Base para torta desmontable nº20",
+            "Pincel tiritas",
+            "Base para hacer torta",
+            "Guías divisores circulares",
+            "Cuchillo para cortar torta",
+            "Mangas x3",
+            "Base telgopor por 24cm"
+        ];
+
+        const shoppingList = document.getElementById("shoppingList");
+
+        // Recuperar estado desde localStorage
+        const savedSelections = JSON.parse(localStorage.getItem("shoppingSelections")) || {};
+
+        // Crear elementos de la lista
+        articulos.forEach(item => {
+            const itemDiv = document.createElement("div");
+            itemDiv.classList.add("item");
+
+            const label = document.createElement("label");
+            label.textContent = item;
+
+            const checkboxGroup = document.createElement("div");
+            checkboxGroup.classList.add("checkbox-group");
+
+            const siCheckbox = createCheckbox("yes", item, "Sí");
+            const noCheckbox = createCheckbox("no", item, "No");
+
+            checkboxGroup.appendChild(siCheckbox);
+            checkboxGroup.appendChild(noCheckbox);
+
+            itemDiv.appendChild(label);
+            itemDiv.appendChild(checkboxGroup);
+            shoppingList.appendChild(itemDiv);
+        });
+
+        function createCheckbox(className, itemName, labelText) {
+            const container = document.createElement("div");
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.className = className;
+            checkbox.dataset.name = itemName;
+
+            const label = document.createElement("label");
+            label.textContent = labelText;
+
+            // Restaurar estado del checkbox desde localStorage
+            if (savedSelections[itemName] === className) {
+                checkbox.checked = true;
+            }
+
+            checkbox.addEventListener("change", () => {
+                const group = checkbox.closest(".checkbox-group");
+                group.querySelectorAll("input[type='checkbox']").forEach(cb => {
+                    if (cb !== checkbox) cb.checked = false;
+                });
+                saveSelections();
+                updateLists();
+            });
+
+            container.appendChild(checkbox);
+            container.appendChild(label);
+            return container;
+        }
+
+        function saveSelections() {
+            const selections = {};
+            articulos.forEach(item => {
+                const si = document.querySelector(`.yes[data-name="${item}"]`).checked;
+                const no = document.querySelector(`.no[data-name="${item}"]`).checked;
+
+                if (si) selections[item] = "yes";
+                if (no) selections[item] = "no";
+            });
+            localStorage.setItem("shoppingSelections", JSON.stringify(selections));
+        }
+
+        function updateLists() {
+            const purchasedList = document.getElementById("purchasedList");
+            const pendingList = document.getElementById("pendingList");
+
+            purchasedList.innerHTML = "";
+            pendingList.innerHTML = "";
+
+            articulos.forEach(item => {
+                const si = document.querySelector(`.yes[data-name="${item}"]`).checked;
+                const no = document.querySelector(`.no[data-name="${item}"]`).checked;
+
+                const li = document.createElement("li");
+                li.textContent = item;
+
+                if (si) purchasedList.appendChild(li);
+                if (no) pendingList.appendChild(li);
+            });
+        }
+
+        // Inicializar listas
+        updateLists();
+    </script>
+</body>
+</html>
