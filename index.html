@@ -132,6 +132,29 @@
     </div>
 
     <script>
+    // Lista inicial completa de artículos
+    let articulos = JSON.parse(localStorage.getItem("shoppingItems")) || [
+        "Pasta ballina azul",
+        "Ballina blanca x2",
+        "Pasta ballina amarilla",
+        "Relleno",
+        "Fécula de maíz",
+        "Fratacho rígido",
+        "Fratacho flexible",
+        "Base para torta desmontable nº20",
+        "Pincel tiritas",
+        "Base para hacer torta",
+        "Guías divisores circulares",
+        "Cuchillo para cortar torta",
+        "Mangas x3",
+        "Base telgopor por 24cm"
+    ];
+
+    const shoppingList = document.getElementById("shoppingList");
+
+    // Recuperar estado desde localStorage
+    const savedSelections = JSON.parse(localStorage.getItem("shoppingSelections")) || {};
+
     function initializeList() {
         shoppingList.innerHTML = "";
         articulos.forEach(item => {
@@ -159,6 +182,30 @@
         updateLists();
     }
 
+    function createCheckbox(className, itemName, labelText) {
+        const container = document.createElement("div");
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.className = className;
+        checkbox.dataset.name = itemName;
+
+        const label = document.createElement("label");
+        label.textContent = labelText;
+
+        checkbox.addEventListener("change", () => {
+            const group = checkbox.closest(".checkbox-group");
+            group.querySelectorAll("input[type='checkbox']").forEach(cb => {
+                if (cb !== checkbox) cb.checked = false;
+            });
+            saveSelections();
+            updateLists();
+        });
+
+        container.appendChild(checkbox);
+        container.appendChild(label);
+        return container;
+    }
+
     function restoreSelections() {
         // Restaurar los estados de los checkboxes según localStorage
         articulos.forEach(item => {
@@ -167,6 +214,37 @@
                 const checkbox = document.querySelector(`.${savedClass}[data-name="${item}"]`);
                 if (checkbox) checkbox.checked = true;
             }
+        });
+    }
+
+    function saveSelections() {
+        const selections = {};
+        articulos.forEach(item => {
+            const si = document.querySelector(`.yes[data-name="${item}"]`).checked;
+            const no = document.querySelector(`.no[data-name="${item}"]`).checked;
+
+            if (si) selections[item] = "yes";
+            if (no) selections[item] = "no";
+        });
+        localStorage.setItem("shoppingSelections", JSON.stringify(selections));
+    }
+
+    function updateLists() {
+        const purchasedList = document.getElementById("purchasedList");
+        const pendingList = document.getElementById("pendingList");
+
+        purchasedList.innerHTML = "";
+        pendingList.innerHTML = "";
+
+        articulos.forEach(item => {
+            const si = document.querySelector(`.yes[data-name="${item}"]`).checked;
+            const no = document.querySelector(`.no[data-name="${item}"]`).checked;
+
+            const li = document.createElement("li");
+            li.textContent = item;
+
+            if (si) purchasedList.appendChild(li);
+            if (no) pendingList.appendChild(li);
         });
     }
 
@@ -179,6 +257,25 @@
             document.getElementById("newItem").value = "";
         }
     }
+
+    function updateClock() {
+        const now = new Date().toLocaleTimeString("es-AR", { timeZone: "America/Argentina/Buenos_Aires" });
+        const timeContainer = document.getElementById("timeContainer");
+        const alert = document.getElementById("alert");
+
+        timeContainer.textContent = `Hora actual en Argentina: ${now}`;
+
+        if (now === "15:45:00") {
+            alert.textContent = "¡Tenés que ir a buscar a Zoe!";
+        } else {
+            alert.textContent = "";
+        }
+    }
+
+    setInterval(updateClock, 1000);
+
+    // Inicializar lista
+    initializeList();
 </script>
 </body>
 </html>
