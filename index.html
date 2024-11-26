@@ -53,6 +53,40 @@
         .sublist {
             margin-top: 20px;
         }
+        .add-item {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .add-item input {
+            padding: 10px;
+            font-size: 1em;
+            width: 70%;
+            margin-right: 10px;
+        }
+        .add-item button {
+            padding: 10px;
+            font-size: 1em;
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .add-item button:hover {
+            background-color: #45a049;
+        }
+        .time-container {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+        .alert {
+            color: red;
+            font-size: 1.5em;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 10px;
+        }
         /* Estilos responsive */
         @media (max-width: 600px) {
             .item {
@@ -76,6 +110,12 @@
 <body>
     <div class="container">
         <h1>Artículos a Comprar</h1>
+
+        <div class="add-item">
+            <input type="text" id="newItem" placeholder="Agregar nuevo artículo">
+            <button onclick="addNewItem()">Agregar</button>
+        </div>
+
         <div id="shoppingList"></div>
 
         <div class="sublist">
@@ -86,10 +126,13 @@
             <h3>Falta comprar</h3>
             <ul id="pendingList"></ul>
         </div>
+
+        <div class="time-container" id="timeContainer"></div>
+        <div id="alert" class="alert"></div>
     </div>
 
     <script>
-        const articulos = [
+        let articulos = JSON.parse(localStorage.getItem("shoppingItems")) || [
             "Pasta ballina azul",
             "Ballina blanca x2",
             "Pasta ballina amarilla",
@@ -111,27 +154,30 @@
         // Recuperar estado desde localStorage
         const savedSelections = JSON.parse(localStorage.getItem("shoppingSelections")) || {};
 
-        // Crear elementos de la lista
-        articulos.forEach(item => {
-            const itemDiv = document.createElement("div");
-            itemDiv.classList.add("item");
+        function initializeList() {
+            shoppingList.innerHTML = "";
+            articulos.forEach(item => {
+                const itemDiv = document.createElement("div");
+                itemDiv.classList.add("item");
 
-            const label = document.createElement("label");
-            label.textContent = item;
+                const label = document.createElement("label");
+                label.textContent = item;
 
-            const checkboxGroup = document.createElement("div");
-            checkboxGroup.classList.add("checkbox-group");
+                const checkboxGroup = document.createElement("div");
+                checkboxGroup.classList.add("checkbox-group");
 
-            const siCheckbox = createCheckbox("yes", item, "Sí");
-            const noCheckbox = createCheckbox("no", item, "No");
+                const siCheckbox = createCheckbox("yes", item, "Sí");
+                const noCheckbox = createCheckbox("no", item, "No");
 
-            checkboxGroup.appendChild(siCheckbox);
-            checkboxGroup.appendChild(noCheckbox);
+                checkboxGroup.appendChild(siCheckbox);
+                checkboxGroup.appendChild(noCheckbox);
 
-            itemDiv.appendChild(label);
-            itemDiv.appendChild(checkboxGroup);
-            shoppingList.appendChild(itemDiv);
-        });
+                itemDiv.appendChild(label);
+                itemDiv.appendChild(checkboxGroup);
+                shoppingList.appendChild(itemDiv);
+            });
+            updateLists();
+        }
 
         function createCheckbox(className, itemName, labelText) {
             const container = document.createElement("div");
@@ -143,7 +189,6 @@
             const label = document.createElement("label");
             label.textContent = labelText;
 
-            // Restaurar estado del checkbox desde localStorage
             if (savedSelections[itemName] === className) {
                 checkbox.checked = true;
             }
@@ -193,9 +238,36 @@
             });
         }
 
-        // Inicializar listas
-        updateLists();
+        function addNewItem() {
+            const newItem = document.getElementById("newItem").value.trim();
+            if (newItem && !articulos.includes(newItem)) {
+                articulos.push(newItem);
+                localStorage.setItem("shoppingItems", JSON.stringify(articulos));
+                initializeList();
+                document.getElementById("newItem").value = "";
+            }
+        }
+
+        function updateClock() {
+            const now = new Date().toLocaleTimeString("es-AR", { timeZone: "America/Argentina/Buenos_Aires" });
+            const timeContainer = document.getElementById("timeContainer");
+            const alert = document.getElementById("alert");
+
+            timeContainer.textContent = `Hora actual en Argentina: ${now}`;
+
+            if (now === "15:45:00") {
+                alert.textContent = "¡Tenés que ir a buscar a Zoe!";
+            } else {
+                alert.textContent = "";
+            }
+        }
+
+        setInterval(updateClock, 1000);
+
+        // Inicializar lista
+        initializeList();
     </script>
 </body>
 </html>
+
 
